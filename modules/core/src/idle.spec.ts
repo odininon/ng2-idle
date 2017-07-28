@@ -399,6 +399,27 @@ describe('core/Idle', () => {
         instance.stop();
       }));
 
+      it('emits an onTimeout event if the user was gone a long time', fakeAsync(() => {
+        spyOn(instance.onTimeout, 'emit').and.callThrough();
+        spyOn(instance.onIdleStart, 'emit').and.callThrough();
+        spyOn(instance.onTimeoutWarning, 'emit').and.callThrough();
+
+        instance.setTimeout(3);
+        instance.setIdle(1);
+        expiry.mockNow = new Date();
+        instance.setForceLogoutAfterTimeout(true);
+        instance.watch();
+
+        expiry.mockNow = new Date(expiry.now().getTime() + (instance.getIdle() + 1000) * 1000);
+        tick(1000);
+
+        expect(instance.onTimeout.emit).toHaveBeenCalledTimes(1);
+        expect(instance.onIdleStart.emit).toHaveBeenCalledTimes(0);
+        expect(instance.onTimeoutWarning.emit).toHaveBeenCalledTimes(0);
+
+        instance.stop();
+      }));
+
       it('emits an onTimeout event when the countdown reaches 0', fakeAsync(() => {
         spyOn(instance.onTimeout, 'emit').and.callThrough();
 

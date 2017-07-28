@@ -42,6 +42,7 @@ export class Idle implements OnDestroy {
   private countdown: number;
   private keepaliveEnabled = false;
   private keepaliveSvc: KeepaliveSvc;
+  private forceLogoutAfterTimeout = false;
 
   public onIdleStart: EventEmitter<any> = new EventEmitter;
   public onIdleEnd: EventEmitter<any> = new EventEmitter;
@@ -71,6 +72,10 @@ export class Idle implements OnDestroy {
       throw new Error(
           'Cannot set expiry key name because no LocalStorageExpiry has been provided.');
     }
+  }
+
+  setForceLogoutAfterTimeout(value: boolean): boolean {
+    return this.forceLogoutAfterTimeout = value;
   }
 
   /*
@@ -310,6 +315,11 @@ export class Idle implements OnDestroy {
   }
 
   private toggleState(): void {
+    if (this.forceLogoutAfterTimeout && this.getExpiryDiff(this.timeoutVal) <= -this.timeoutVal * 1000) {
+      this.timeout();
+      return;
+    }
+
     this.setIdling(!this.idling);
 
     if (this.idling) {
